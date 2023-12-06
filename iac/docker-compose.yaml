@@ -1,0 +1,42 @@
+version: "3.4"
+
+name: tvmaze
+
+services:
+   mongodb:
+     image: mongo
+     ports:
+       - '27017:27017'
+     volumes:
+       - dbdata:/data/db
+     networks:
+       - tv-maze-network
+
+   tv-maze-api:
+     image: tv-maze-api
+     container_name: tv-maze-api
+     build:
+       context: ../
+       dockerfile: iac/Dockerfile
+     depends_on:
+       -  mongodb
+     ports:
+       - "4200:80"
+     networks:
+       - tv-maze-network
+     environment:
+       - ASPNETCORE_ENVIRONMENT=Development
+       - ASPNETCORE_URLS=http://+:80
+       - TvMazeAuthConfiguration__ValidIssuer=http://localhost:4200
+       - TvMazeAuthConfiguration__ValidAudience=http://localhost:4200
+       - TvMazeAuthConfiguration__Secret=JWTAuthentication@123456_Aa!***______
+       - TvMazeAuthConfiguration__UserName=UserName01
+       - TvMazeAuthConfiguration__Password=UserName01
+       - TvMazeContextConfigOptions__ConnectionString=mongodb://mongodb:27017
+
+networks:
+  tv-maze-network:
+    driver: bridge  
+
+volumes:
+  dbdata:
